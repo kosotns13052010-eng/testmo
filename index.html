@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мотивация учения — тренажёр</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #F9F8F6; --accent: #1A3A4A; --secondary: #E8A735; --white: #FFFFFF;
+            --green: #2E7D32; --green-bg: #E8F5E9; --red: #C62828; --red-bg: #FFEBEE;
+            --gray: #757575; --light-gray: #E0E0E0; --shadow: 0 4px 24px rgba(26, 58, 74, 0.10);
+            --shadow-lg: 0 8px 40px rgba(26, 58, 74, 0.15); --radius: 16px; --radius-sm: 10px;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--accent); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; line-height: 1.6; }
+        .container { width: 100%; max-width: 720px; position: relative; }
+
+        .title-screen { text-align: center; padding: 48px 32px; background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-lg); animation: fadeIn 0.6s ease; }
+        .title-icon { font-size: 64px; margin-bottom: 16px; display: block; animation: pulse 2s infinite; }
+        .title-screen h1 { font-family: 'Merriweather', serif; font-size: 28px; color: var(--accent); margin-bottom: 8px; line-height: 1.3; }
+        .title-screen .subtitle { font-size: 15px; color: var(--gray); margin-bottom: 24px; font-style: italic; }
+        .title-screen .description { font-size: 14px; color: #555; background: var(--bg); padding: 20px; border-radius: var(--radius-sm); border-left: 4px solid var(--secondary); text-align: left; margin-bottom: 32px; line-height: 1.7; }
+        .btn-start { display: inline-flex; align-items: center; gap: 10px; background: var(--secondary); color: var(--white); font-size: 18px; font-weight: 700; padding: 16px 48px; border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(232, 167, 53, 0.4); font-family: inherit; }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(232, 167, 53, 0.5); background: #d4962e; }
+        .btn-start:active { transform: translateY(0); }
+
+        .quiz-screen { display: none; animation: fadeIn 0.5s ease; }
+        .quiz-screen.active { display: block; }
+        .progress-wrapper { margin-bottom: 24px; }
+        .progress-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .progress-label { font-size: 13px; font-weight: 600; color: var(--gray); }
+        .progress-bar { width: 100%; height: 8px; background: var(--light-gray); border-radius: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--accent)); border-radius: 8px; transition: width 0.5s ease; }
+
+        .question-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px; position: relative; overflow: hidden; }
+        .question-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--secondary), var(--accent)); }
+        .question-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-yesno { background: #E3F2FD; color: #1565C0; } .badge-single { background: #FFF3E0; color: #E65100; } .badge-multi { background: #F3E5F5; color: #7B1FA2; }
+        .question-text { font-size: 17px; font-weight: 600; margin-bottom: 24px; line-height: 1.6; color: var(--accent); }
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 18px; background: var(--bg); border: 2px solid transparent; border-radius: var(--radius-sm); cursor: pointer; font-size: 15px; font-weight: 500; color: var(--accent); transition: all 0.2s ease; text-align: left; font-family: inherit; }
+        .option-btn:hover:not(.disabled) { border-color: var(--secondary); background: #FFF8E8; }
+        .option-btn.selected { border-color: var(--accent); background: #E8EEF1; }
+        .option-btn.correct { border-color: var(--green); background: var(--green-bg); }
+        .option-btn.wrong { border-color: var(--red); background: var(--red-bg); }
+        .option-btn.disabled { cursor: default; opacity: 0.7; }
+        .option-marker { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--light-gray); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; transition: all 0.2s ease; }
+        .option-btn.selected .option-marker { border-color: var(--accent); background: var(--accent); color: var(--white); }
+        .option-btn.correct .option-marker { border-color: var(--green); background: var(--green); color: var(--white); }
+        .option-btn.wrong .option-marker { border-color: var(--red); background: var(--red); color: var(--white); }
+        .option-btn.multi-option .option-marker { border-radius: 6px; }
+        .yesno-row { display: flex; gap: 12px; }
+        .yesno-row .option-btn { justify-content: center; padding: 18px 24px; }
+        .multi-hint { font-size: 13px; color: var(--gray); margin: 12px 0 4px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+
+        .action-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; font-weight: 600; padding: 10px 28px; border: none; border-radius: 50px; cursor: pointer; margin-top: 16px; transition: all 0.2s ease; font-family: inherit; }
+        .btn-submit { background: var(--accent); color: var(--white); }
+        .btn-submit:hover:not(:disabled) { background: #14303d; transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.5; cursor: default; transform: none; }
+        .btn-retry { background: var(--secondary); color: var(--white); }
+        .btn-retry:hover { background: #d4962e; transform: translateY(-1px); }
+
+        .notification { margin-top: 20px; padding: 14px 18px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; display: none; animation: slideUp 0.3s ease; line-height: 1.6; }
+        .notification.show { display: block; }
+        .notification.success { background: var(--green-bg); color: var(--green); border-left: 4px solid var(--green); }
+        .notification.error { background: var(--red-bg); color: var(--red); border-left: 4px solid var(--red); }
+        .notification .hint { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.1); font-size: 13px; opacity: 0.85; }
+
+        .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 6px; background: transparent; color: var(--gray); font-size: 14px; font-weight: 500; padding: 10px 20px; border: 2px solid var(--light-gray); border-radius: 50px; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-back.hidden { visibility: hidden; }
+        .btn-next { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: var(--white); font-size: 15px; font-weight: 600; padding: 12px 32px; border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+        .btn-next:hover:not(:disabled) { background: #14303d; transform: translateY(-1px); }
+        .btn-next:disabled { opacity: 0.4; cursor: default; }
+
+        .results-screen { display: none; animation: fadeIn 0.6s ease; }
+        .results-screen.active { display: block; }
+        .results-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 40px 32px; text-align: center; position: relative; }
+        .results-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--secondary), var(--accent)); border-radius: var(--radius) var(--radius) 0 0; }
+
+        .results-icon { font-size: 72px; margin-bottom: 16px; display: block; }
+        .results-grade { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .results-detail { font-size: 15px; color: var(--gray); margin-bottom: 32px; line-height: 1.6; }
+
+        .recommendations { text-align: left; background: var(--bg); border-radius: var(--radius-sm); padding: 24px; margin-bottom: 32px; }
+        .recommendations h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        .recommendations ul { list-style: none; padding: 0; }
+        .recommendations li { font-size: 14px; padding: 12px 0; border-bottom: 1px solid var(--light-gray); line-height: 1.6; color: var(--accent); }
+        .recommendations li:last-child { border-bottom: none; }
+        .recommendations li::before { content: '💡'; margin-right: 8px; }
+
+        .btn-restart { display: inline-flex; align-items: center; gap: 10px; background: var(--secondary); color: var(--white); font-size: 16px; font-weight: 700; padding: 14px 40px; border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 16px rgba(232, 167, 53, 0.4); font-family: inherit; }
+        .btn-restart:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(232, 167, 53, 0.5); background: #d4962e; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+        .shake { animation: shake 0.4s ease; }
+        @media (max-width: 600px) {
+            .title-screen { padding: 32px 20px; } .title-screen h1 { font-size: 22px; } .question-card { padding: 24px 18px; }
+            .question-text { font-size: 15px; } .option-btn { padding: 12px 14px; font-size: 14px; } .yesno-row .option-btn { padding: 14px 16px; }
+            .results-card { padding: 32px 20px; } .btn-start { padding: 14px 36px; font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="titleScreen" class="title-screen">
+        <span class="title-icon">🎓</span>
+        <h1>МОТИВАЦИЯ УЧЕНИЯ</h1>
+        <p class="subtitle">По материалам курса педагогической психологии</p>
+        <div class="description">
+            <strong>Тренажёр для самопроверки</strong><br><br>
+            • 10 вопросов с проверкой<br>
+            • Типы вопросов: <em>Да/Нет</em>, <em>один верный</em>, <em>несколько верных</em><br>
+            • При ошибке — подсказка и возможность ответить заново<br>
+            • В конце — оценка и персональные рекомендации
+        </div>
+        <button class="btn-start" onclick="startQuiz()">Начать тренировку →</button>
+    </div>
+
+    <div id="quizScreen" class="quiz-screen">
+        <div class="progress-wrapper">
+            <div class="progress-info">
+                <span class="progress-label" id="progressLabel">Вопрос 1 из 10</span>
+                <span class="progress-label" id="scoreLabel">Баллы: 0</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+        </div>
+        <div class="question-card" id="questionCard">
+            <span class="question-badge" id="questionBadge"></span>
+            <p class="question-text" id="questionText"></p>
+            <div id="optionsContainer"></div>
+            <div class="notification" id="notification"></div>
+        </div>
+        <div class="nav-row">
+            <button class="btn-back hidden" id="btnBack" onclick="goBack()">← Назад</button>
+            <button class="btn-next" id="btnNext" onclick="goNext()" disabled>Далее →</button>
+        </div>
+    </div>
+
+    <div id="resultsScreen" class="results-screen">
+        <div class="results-card">
+            <span class="results-icon" id="resultsIcon"></span>
+            <div class="results-grade" id="resultsGrade"></div>
+            <p class="results-detail" id="resultsDetail"></p>
+            <div class="recommendations" id="recommendationsBlock">
+                <h3>📋 Персональные рекомендации</h3>
+                <ul id="recommendationsList"></ul>
+            </div>
+            <button class="btn-restart" onclick="restartQuiz()">🔄 Пройти заново</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { id: 1, type: 'yesno', text: 'Внутренняя мотивация — это учение ради похвалы, отметки или подарка.', answer: false, hint: 'Внутренняя мотивация связана с интересом к содержанию, а не с внешними стимулами.', recommendation: 'Внутренняя мотивация исходит из интереса к самому процессу учёбы, а не из желания получить похвалу или подарок.' },
+        { id: 2, type: 'single', text: 'Какой компонент НЕ входит в структуру учебной мотивации по А.К. Марковой?', options: ['Потребность в учении', 'Смысл учения', 'Скорость чтения', 'Эмоциональное сопровождение'], answer: 2, hint: 'Компоненты: потребность, смысл, цель, эмоции.', recommendation: 'Скорость чтения не является компонентом мотивации. Повтори структуру: потребность, смысл, цель и эмоциональное сопровождение.' },
+        { id: 3, type: 'multi', text: 'Какие из мотивов относятся к ПОЗНАВАТЕЛЬНЫМ?', options: ['Получить пятёрку', 'Интерес к новым фактам', 'Избежать наказания', 'Интерес к способам добывания знаний', 'Быть первым'], answer: [1, 3], hint: 'Познавательные мотивы — про содержание и способы учения.', recommendation: 'К познавательным относятся мотивы, связанные с интересом к содержанию и способам получения знаний, а не к оценке или статусу.' },
+        { id: 4, type: 'yesno', text: 'В 1–2 классах у детей доминируют познавательные мотивы, а к 3–4 классу — социальные.', answer: false, hint: 'Наоборот: сначала социальные, потом познавательные.', recommendation: 'В 1–2 классах у детей доминируют социальные мотивы (понравиться учителю, быть хорошим учеником), а к 3–4 классу развиваются познавательные.' },
+        { id: 5, type: 'single', text: 'Что, согласно теории самодетерминации, НЕ является базовой потребностью?', options: ['Автономия', 'Компетентность', 'Материальное поощрение', 'Связанность с другими'], answer: 2, hint: 'Три базовые потребности: автономия, компетентность, связанность.', recommendation: 'Материальное поощрение не является базовой психологической потребностью. Базовые потребности: автономия, компетентность и связанность с другими.' },
+        { id: 6, type: 'multi', text: 'Какие атрибуции являются ПРОДУКТИВНЫМИ?', options: ['Я глупый', 'Недостаточно старался', 'Нет способностей', 'Пропустил шаг', 'Не везёт'], answer: [1, 3], hint: 'Продуктивные атрибуции — внутренние, нестабильные и контролируемые.', recommendation: 'Продуктивные атрибуции — это те, которые можно изменить: «недостаточно старался» и «пропустил шаг». Они мотивируют на усилия, в отличие от «я глупый» или «нет способностей».' },
+        { id: 7, type: 'yesno', text: 'Публичное сравнение детей в классе способствует развитию внутренней мотивации.', answer: false, hint: 'Публичное сравнение разрушает автономию и компетентность, формирует страх выглядеть хуже.', recommendation: 'Публичное сравнение вредит мотивации: оно разрушает чувство автономии и компетентности, формирует страх и тревогу.' },
+        { id: 8, type: 'single', text: 'Какой метод диагностики мотивации рекомендован для 1–2 классов?', options: ['«Лесенка побуждений»', '«Незаконченные предложения»', 'Опросник самоэффективности', 'Тест IQ'], answer: 0, hint: 'Для 1–2 классов — «Лесенка побуждений», для 3–4 — «Незаконченные предложения».', recommendation: 'Для 1–2 классов рекомендована «Лесенка побуждений», а для 3–4 — метод «Незаконченные предложения».' },
+        { id: 9, type: 'multi', text: 'Какие из перечисленных действий учителя разрушают мотивацию?', options: ['Публичное сравнение', 'Наказание отметкой за поведение', 'Качественная обратная связь', 'Игнорирование вопросов', 'Поощрение старания'], answer: [0, 1, 3], hint: 'Разрушают: сравнение, отметка как наказание, игнорирование инициативы, монотонность, чрезмерная помощь.', recommendation: 'Мотивацию разрушают: публичное сравнение, использование отметки как наказания и игнорирование вопросов и инициативы учеников.' },
+        { id: 10, type: 'single', text: 'Что такое эффект переподкрепления?', options: ['Ученик начинает учиться лучше', 'Внешнее поощрение убивает внутреннюю мотивацию', 'Отметка повышает интерес', 'Похвала всегда полезна'], answer: 1, hint: 'Интенсивное использование внешней мотивации подрывает внутреннюю.', recommendation: 'Эффект переподкрепления — это когда внешние стимулы (поощрения, подарки) постепенно подрывают внутренний интерес к учёбе.' }
+    ];
+
+    let currentQuestion = 0; let score = 0; let answeredCorrectly = []; let hasError = []; let questionState = []; let selectedAnswers = [];
+
+    function initState() { currentQuestion = 0; score = 0; answeredCorrectly = new Array(questions.length).fill(false); hasError = new Array(questions.length).fill(false); questionState = new Array(questions.length).fill('pending'); selectedAnswers = new Array(questions.length).fill(null); }
+
+    function startQuiz() { initState(); document.getElementById('titleScreen').style.display = 'none'; document.getElementById('resultsScreen').classList.remove('active'); document.getElementById('resultsScreen').style.display = 'none'; document.getElementById('quizScreen').classList.add('active'); renderQuestion(); }
+    function restartQuiz() { initState(); document.getElementById('resultsScreen').classList.remove('active'); document.getElementById('resultsScreen').style.display = 'none'; document.getElementById('quizScreen').classList.remove('active'); document.getElementById('titleScreen').style.display = 'block'; document.getElementById('titleScreen').style.animation = 'fadeIn 0.6s ease'; }
+    function goBack() { if (currentQuestion > 0) { currentQuestion--; renderQuestion(); } }
+    function goNext() { if (currentQuestion < questions.length - 1) { currentQuestion++; renderQuestion(); } else { showResults(); } }
+
+    function isSelectionValid(qIdx) { const q = questions[qIdx]; const sel = selectedAnswers[qIdx]; if (sel === null || sel === undefined) return false; if (q.type === 'multi') return Array.isArray(sel) && sel.length > 0; return true; }
+
+    function submitAnswer() {
+        if (!isSelectionValid(currentQuestion)) return;
+        const q = questions[currentQuestion]; const sel = selectedAnswers[currentQuestion];
+        if (!answeredCorrectly[currentQuestion]) hasError[currentQuestion] = true;
+        let isCorrect = false;
+        if (q.type === 'multi') { isCorrect = [...sel].sort((a,b)=>a-b).join(',') === [...q.answer].sort((a,b)=>a-b).join(','); }
+        else { isCorrect = sel === q.answer; }
+        if (isCorrect) { questionState[currentQuestion] = 'correct'; if (!answeredCorrectly[currentQuestion]) { score++; answeredCorrectly[currentQuestion] = true; } }
+        else { questionState[currentQuestion] = 'wrong'; document.getElementById('questionCard').classList.add('shake'); setTimeout(() => document.getElementById('questionCard').classList.remove('shake'), 400); }
+        renderOptionsOnly();
+    }
+
+    function retryAnswer() { questionState[currentQuestion] = 'pending'; const q = questions[currentQuestion]; selectedAnswers[currentQuestion] = q.type === 'multi' ? [] : null; renderOptionsOnly(); }
+    function selectOption(val) { selectedAnswers[currentQuestion] = val; renderOptionsOnly(); }
+    function toggleMulti(val) { let sel = selectedAnswers[currentQuestion]; if (!Array.isArray(sel)) sel = []; const pos = sel.indexOf(val); if (pos >= 0) sel.splice(pos, 1); else sel.push(val); selectedAnswers[currentQuestion] = sel; renderOptionsOnly(); }
+
+    function renderOptionsOnly() {
+        const q = questions[currentQuestion]; const container = document.getElementById('optionsContainer'); container.innerHTML = '';
+        const state = questionState[currentQuestion]; const isCorrect = state === 'correct'; const isWrong = state === 'wrong'; const userAns = selectedAnswers[currentQuestion];
+
+        if (q.type === 'yesno') {
+            const row = document.createElement('div'); row.className = 'yesno-row';
+            ['Да', 'Нет'].forEach((label, idx) => { const val = idx === 0; const btn = document.createElement('button'); btn.className = 'option-btn';
+                if (isCorrect) btn.classList.add('disabled'); if (isCorrect && val === q.answer) btn.classList.add('correct');
+                if (isWrong) { btn.classList.add('disabled'); if (userAns === val) btn.classList.add(val === q.answer ? 'correct' : 'wrong'); else if (val === q.answer) btn.classList.add('correct'); }
+                if (state === 'pending' && userAns === val) btn.classList.add('selected'); if (state === 'pending') btn.onclick = () => selectOption(val);
+                const marker = document.createElement('span'); marker.className = 'option-marker'; marker.textContent = label === 'Да' ? '✓' : '✗'; btn.appendChild(marker); btn.appendChild(document.createTextNode(label)); row.appendChild(btn);
+            }); container.appendChild(row);
+        } else if (q.type === 'single') {
+            const letters = ['А', 'Б', 'В', 'Г']; const list = document.createElement('div'); list.className = 'options-list';
+            q.options.forEach((opt, idx) => { const btn = document.createElement('button'); btn.className = 'option-btn';
+                if (isCorrect) btn.classList.add('disabled'); if (isCorrect && idx === q.answer) btn.classList.add('correct');
+                if (isWrong) { btn.classList.add('disabled'); if (userAns === idx) btn.classList.add(idx === q.answer ? 'correct' : 'wrong'); else if (idx === q.answer) btn.classList.add('correct'); }
+                if (state === 'pending' && userAns === idx) btn.classList.add('selected'); if (state === 'pending') btn.onclick = () => selectOption(idx);
+                const marker = document.createElement('span'); marker.className = 'option-marker'; marker.textContent = letters[idx]; btn.appendChild(marker); btn.appendChild(document.createTextNode(opt)); list.appendChild(btn);
+            }); container.appendChild(list);
+        } else if (q.type === 'multi') {
+            const letters = ['А', 'Б', 'В', 'Г', 'Д']; const list = document.createElement('div'); list.className = 'options-list';
+            const arr = Array.isArray(userAns) ? userAns : [];
+            q.options.forEach((opt, idx) => { const btn = document.createElement('button'); btn.className = 'option-btn multi-option';
+                if (isCorrect) btn.classList.add('disabled'); if (isCorrect && q.answer.includes(idx)) btn.classList.add('correct');
+                if (isWrong) { btn.classList.add('disabled'); if (arr.includes(idx) && !q.answer.includes(idx)) btn.classList.add('wrong'); if (q.answer.includes(idx)) btn.classList.add('correct'); }
+                if (state === 'pending') { if (arr.includes(idx)) btn.classList.add('selected'); btn.onclick = () => toggleMulti(idx); }
+                const marker = document.createElement('span'); marker.className = 'option-marker';
+                if (state === 'pending') marker.textContent = arr.includes(idx) ? '✓' : letters[idx];
+                else if (isWrong && !q.answer.includes(idx) && arr.includes(idx)) marker.textContent = '✗';
+                else marker.textContent = q.answer.includes(idx) ? '✓' : letters[idx];
+                btn.appendChild(marker); btn.appendChild(document.createTextNode(opt)); list.appendChild(btn);
+            }); container.appendChild(list);
+            if (state === 'pending') { const hintEl = document.createElement('p'); hintEl.className = 'multi-hint'; hintEl.textContent = `💡 Необходимо выбрать: ${q.answer.length} ответа(ов)`; container.appendChild(hintEl); }
+        }
+
+        const btnContainer = document.createElement('div'); btnContainer.style.marginTop = '16px';
+        if (state === 'pending') { const sb = document.createElement('button'); sb.className = 'action-btn btn-submit'; sb.textContent = 'Ответить'; sb.onclick = submitAnswer; if (!isSelectionValid(currentQuestion)) sb.disabled = true; btnContainer.appendChild(sb); }
+        else if (state === 'wrong') { const rb = document.createElement('button'); rb.className = 'action-btn btn-retry'; rb.textContent = '🔄 Решить ещё раз'; rb.onclick = retryAnswer; btnContainer.appendChild(rb); }
+        container.appendChild(btnContainer);
+
+        const notif = document.getElementById('notification'); notif.className = 'notification'; notif.innerHTML = '';
+        if (isCorrect) { notif.className = 'notification show success'; notif.innerHTML = `✅ <strong>Верно!</strong> <div class="hint">💡 ${q.hint}</div>`; }
+        else if (isWrong) { notif.className = 'notification show error'; notif.innerHTML = `❌ <strong>Неверно. Попробуйте ещё раз!</strong><div class="hint">💡 Подсказка: ${q.hint}</div>`; }
+        document.getElementById('btnNext').disabled = state !== 'correct';
+        document.getElementById('scoreLabel').textContent = `Баллы: ${score}`;
+    }
+
+    function renderQuestion() {
+        const q = questions[currentQuestion];
+        document.getElementById('progressLabel').textContent = `Вопрос ${currentQuestion + 1} из ${questions.length}`;
+        document.getElementById('progressFill').style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+        const badge = document.getElementById('questionBadge');
+        if (q.type === 'yesno') { badge.textContent = 'Да / Нет'; badge.className = 'question-badge badge-yesno'; }
+        else if (q.type === 'single') { badge.textContent = 'Один верный ответ'; badge.className = 'question-badge badge-single'; }
+        else { badge.textContent = 'Несколько верных ответов'; badge.className = 'question-badge badge-multi'; }
+        document.getElementById('questionText').textContent = q.text;
+        document.getElementById('btnBack').classList.toggle('hidden', currentQuestion === 0);
+        document.getElementById('btnNext').textContent = currentQuestion === questions.length - 1 ? 'Показать результат →' : 'Далее →';
+        renderOptionsOnly();
+    }
+
+    function showResults() {
+        document.getElementById('quizScreen').classList.remove('active');
+        document.getElementById('resultsScreen').style.display = 'block';
+        document.getElementById('resultsScreen').classList.add('active');
+
+        const pct = Math.round((score / questions.length) * 100);
+        const color = pct >= 90 ? '#2E7D32' : pct >= 70 ? '#E8A735' : pct >= 50 ? '#F57C00' : '#C62828';
+        const grade = pct >= 90 ? '🏆 Отлично!' : pct >= 70 ? '👍 Хорошо' : pct >= 50 ? '📝 Удовлетворительно' : '📖 Нужно повторить';
+
+        document.getElementById('resultsIcon').textContent = pct >= 90 ? '🏆' : pct >= 70 ? '👍' : pct >= 50 ? '📝' : '📖';
+        document.getElementById('resultsGrade').textContent = grade;
+        document.getElementById('resultsGrade').style.color = color;
+        document.getElementById('resultsDetail').textContent = `Вы правильно ответили на ${score} из ${questions.length} вопросов с первой попытки.`;
+
+        const recList = document.getElementById('recommendationsList'); recList.innerHTML = '';
+        const errors = [];
+        questions.forEach((q, i) => { if (hasError[i]) errors.push(q.recommendation); });
+
+        if (errors.length === 0) { recList.innerHTML = '<li style="border:none;">🎉 Ошибок нет! Вы отлично усвоили весь материал.</li>'; }
+        else { errors.forEach(rec => { const li = document.createElement('li'); li.textContent = rec; recList.appendChild(li); }); }
+    }
+</script>
+</body>
+</html>
+
